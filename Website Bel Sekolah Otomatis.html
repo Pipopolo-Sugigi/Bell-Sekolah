@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bel Sekolah Otomatis</title>
+<style>
+  /* ===== Tema & variabel ===== */
+  :root {
+    --scale: 1;
+    --radius: 1rem;
+    --bg-1: #0a1a2b;
+    --bg-2: #12304a;
+    --bg-3: #071521;
+    --panel: #0e2337;
+    --surface: rgba(255, 255, 255, .06);
+    --surface-strong: rgba(255, 255, 255, .1);
+    --border: rgba(255, 255, 255, .14);
+    --text: #eef4fb;
+    --muted: #a3b8cd;
+    --accent: #ffd166;
+    --green: #35d0ad;
+    --red: #f4697a;
+    --blue: #5aa9ff;
+    --shadow: 0 5px 14px rgba(0, 0, 0, .28);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg-1: #eef5fc;
+    --bg-2: #d9e8f6;
+    --bg-3: #f8fbff;
+    --panel: #ffffff;
+    --surface: rgba(255, 255, 255, .9);
+    --surface-strong: rgba(15, 45, 75, .06);
+    --border: rgba(15, 45, 75, .14);
+    --text: #0f2537;
+    --muted: #4f6a86;
+    --accent: #b0741a;
+    --green: #0f8f76;
+    --red: #c22a3a;
+    --blue: #1f6feb;
+    --shadow: 0 4px 12px rgba(15, 45, 75, .12);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: calc(16px * var(--scale)); }
+  body {
+    margin: 0; min-height: 100vh; padding: clamp(.75rem, 2vw, 1.5rem);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+    transition: background .3s ease, color .2s ease;
+  }
+  h1, h2, h3, p { margin: 0; }
+  .app { max-width: min(1180px, 100%); margin-inline: auto; display: grid; gap: 1.15rem; }
+
+  /* ===== Topbar ===== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    padding: .8rem 1.1rem; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .brand { display: flex; align-items: center; gap: .9rem; min-width: 0; }
+  .brand h1 { font-size: 1.3rem; line-height: 1.2; }
+  .brand p { font-size: .88rem; color: var(--muted); }
+  .topbar-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .seg {
+    display: inline-flex; align-items: center; overflow: hidden;
+    background: var(--surface-strong); border: 1px solid var(--border); border-radius: .7rem;
+  }
+  .seg button {
+    border: 0; background: transparent; color: var(--text); cursor: pointer;
+    font: inherit; font-size: .82rem; font-weight: 700;
+    padding: .45rem .6rem; min-width: 2.3rem; transition: background .15s;
+  }
+  .seg button:hover { background: rgba(127, 127, 127, .18); }
+  .seg .level { min-width: 3.6rem; font-weight: 600; color: var(--muted); }
+
+  /* ===== Tombol ===== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border: 0; border-radius: .65rem; padding: .6rem .95rem;
+    font: inherit; font-size: .9rem; font-weight: 650; white-space: nowrap;
+    color: var(--text); background: var(--surface-strong); cursor: pointer;
+    transition: transform .15s ease, filter .15s ease, background .15s ease;
+  }
+  .btn:hover:not(:disabled) { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .08); transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(0); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-primary { background: linear-gradient(135deg, #ffd166, #f0b23f); color: #1f2430; }
+  .btn-success { background: linear-gradient(135deg, #35d0ad, #199b81); color: #04231d; }
+  .btn-danger { background: linear-gradient(135deg, #f4697a, #d63b4c); color: #fff; }
+  .btn-ghost { background: var(--surface-strong); border: 1px solid var(--border); }
+  .btn-block { width: 100%; padding: .8rem; font-size: .95rem; }
+  .btn-sm { padding: .32rem .6rem; font-size: .76rem; }
+  :root[data-theme="light"] .btn-success { color: #fff; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--blue); outline-offset: 2px;
+  }
+
+  /* ===== Kartu & layout ===== */
+  .layout {
+    display: grid; gap: 1.15rem; align-items: start;
+    grid-template-columns: minmax(19rem, 23rem) minmax(0, 1fr);
+  }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+  .column { display: grid; gap: 1.15rem; align-content: start; min-width: 0; }
+  .card-grid { display: grid; gap: 1.15rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.1rem; box-shadow: var(--shadow); min-width: 0;
+  }
+  .card h2 {
+    display: flex; align-items: center; gap: .45rem;
+    font-size: 1rem; margin-bottom: .9rem; letter-spacing: .01em;
+  }
+  .card h2 .btn { margin-left: auto; }
+  .badge {
+    font-size: .72rem; font-weight: 600; color: var(--muted);
+    background: var(--surface-strong); border: 1px solid var(--border);
+    border-radius: 99px; padding: .1rem .55rem;
+  }
+
+  /* ===== Jam ===== */
+  .clock {
+    font-size: 3.4rem; font-weight: 800; line-height: 1.05; text-align: center;
+    font-variant-numeric: tabular-nums; letter-spacing: .02em;
+  }
+  .date { text-align: center; color: var(--muted); font-size: .9rem; margin-top: .2rem; }
+  .next {
+    margin-top: 1rem; padding: .95rem; border-radius: .9rem; text-align: center;
+    border: 1px solid var(--border);
+    background: linear-gradient(160deg, rgba(90, 169, 255, .16), rgba(53, 208, 173, .1));
+  }
+  .next-title { font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .next-label { font-size: 1rem; font-weight: 700; margin-top: .35rem; }
+  .countdown {
+    font-size: 1.9rem; font-weight: 800; color: var(--accent);
+    font-variant-numeric: tabular-nums; margin-top: .2rem;
+  }
+  .next-hint { font-size: .78rem; color: var(--muted); }
+  .status {
+    margin-top: .9rem; padding: .6rem .8rem; border-radius: .7rem; text-align: center;
+    font-size: .85rem; font-weight: 650; border: 1px solid var(--border);
+  }
+  .status.off { background: rgba(244, 105, 122, .16); color: var(--red); }
+  .status.on { background: rgba(53, 208, 173, .16); color: var(--green); }
+  .status.holiday { background: rgba(90, 169, 255, .16); color: var(--blue); }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .9rem; }
+  .actions .btn-block { grid-column: 1 / -1; }
+  .ringing { animation: ring .55s ease-in-out infinite alternate; }
+  @keyframes ring {
+    from { box-shadow: var(--shadow), 0 0 0 0 rgba(255, 209, 102, 0); }
+    to { box-shadow: var(--shadow), 0 0 0 3px rgba(255, 209, 102, .55); }
+  }
+
+  /* ===== Form ===== */
+  .field { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+  .field > span { font-size: .78rem; font-weight: 600; color: var(--muted); }
+  .field > span b { color: var(--text); font-weight: 700; }
+  input, select {
+    width: 100%; font: inherit; font-size: .88rem; color: var(--text);
+    background: var(--surface-strong); border: 1px solid var(--border);
+    border-radius: .6rem; padding: .5rem .6rem;
+  }
+  input[type="range"] { padding: 0; background: transparent; accent-color: var(--accent); }
+  input[type="file"] { padding: .4rem; font-size: .78rem; }
+  input[type="checkbox"] { width: auto; accent-color: var(--green); }
+  input::placeholder { color: var(--muted); }
+  .settings { display: grid; gap: .75rem; }
+  .switch-row {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .86rem; color: var(--text); cursor: pointer;
+  }
+  .hint { font-size: .74rem; color: var(--muted); line-height: 1.45; margin-top: .6rem; }
+  .upload {
+    display: flex; align-items: center; justify-content: center; gap: .45rem;
+    padding: .7rem; border-radius: .7rem; cursor: pointer; text-align: center;
+    font-size: .85rem; font-weight: 650; color: var(--blue);
+    border: 1px dashed var(--border); background: var(--surface-strong);
+    transition: border-color .15s, background .15s;
+  }
+  .upload:hover { border-color: var(--blue); }
+  .upload input { display: none; }
+
+  /* ===== Tab & tabel ===== */
+  .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem; }
+  .tab {
+    border: 1px solid var(--border); background: var(--surface-strong); color: var(--text);
+    border-radius: 99px; padding: .35rem .8rem; font: inherit; font-size: .82rem;
+    font-weight: 650; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .tab:hover { background: rgba(127, 127, 127, .2); }
+  .tab.active { background: linear-gradient(135deg, #ffd166, #f0b23f); color: #1f2430; border-color: transparent; }
+  .tab.today { box-shadow: 0 0 0 2px rgba(53, 208, 173, .45); }
+  .tab.holiday { opacity: .6; text-decoration: line-through; }
+  .day-tools {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .7rem; flex-wrap: wrap; margin-bottom: .75rem;
+  }
+  .search { max-width: 13rem; }
+  .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: .8rem; }
+  table { width: 100%; border-collapse: collapse; min-width: 56rem; }
+  th {
+    padding: .55rem .7rem; text-align: left; font-size: .7rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    background: rgba(127, 127, 127, .1); white-space: nowrap;
+  }
+  th.right { text-align: right; }
+  td { padding: .5rem .7rem; border-top: 1px solid var(--border); vertical-align: middle; }
+  tr.passed { opacity: 1; background: rgba(127, 127, 127, .05); }
+  tr.upcoming { background: rgba(255, 209, 102, .12); }
+  .time-pill {
+    display: inline-block; padding: .18rem .5rem; border-radius: .45rem;
+    background: var(--surface-strong); border: 1px solid var(--border);
+    font-weight: 700; font-size: .84rem; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .label-cell { font-size: .88rem; }
+  /* ===== Kontras teks Jadwal Bel (hitam cerah, tetap tidak tebal) ===== */
+  .card:has(#scheduleTitle) table td,
+  .card:has(#scheduleTitle) table th,
+  .card:has(#scheduleTitle) .empty-state,
+  .card:has(#scheduleTitle) .music-select,
+  .card:has(#scheduleTitle) .time-pill {
+    color: #f2f7fd;
+  }
+  :root[data-theme="light"] .card:has(#scheduleTitle) table td,
+  :root[data-theme="light"] .card:has(#scheduleTitle) table th,
+  :root[data-theme="light"] .card:has(#scheduleTitle) .empty-state,
+  :root[data-theme="light"] .card:has(#scheduleTitle) .music-select,
+  :root[data-theme="light"] .card:has(#scheduleTitle) .time-pill {
+    color: #07090c;
+  }
+  .music-select { font-size: .78rem; padding: .35rem .45rem; max-width: 11rem; }
+  .announce-input { font-size: .78rem; padding: .35rem .45rem; min-width: 9rem; }
+  .time-text { max-width: 9.5rem; }
+  .row-actions { display: flex; gap: .35rem; justify-content: flex-end; flex-wrap: wrap; }
+  .action-btn {
+    border: 1px solid var(--border); background: var(--surface-strong);
+    border-radius: .5rem; padding: .28rem .6rem; cursor: pointer;
+    color: var(--text); font: inherit; font-size: .78rem; font-weight: 600;
+    transition: background .15s, transform .15s; white-space: nowrap;
+  }
+  .action-btn:hover { background: rgba(127, 127, 127, .2); transform: translateY(-1px); }
+  .action-btn.danger { color: var(--red); }
+  .empty-state { padding: 1.1rem; text-align: center; color: var(--muted); font-size: .84rem; }
+
+  /* ===== Form tambah & toolbar ===== */
+  .add-form {
+    display: grid; gap: .6rem; align-items: end; margin-top: .9rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+  }
+  @media (max-width: 700px) {
+    .add-form { grid-template-columns: 1fr 1fr; }
+    .add-form .btn { grid-column: 1 / -1; }
+  }
+  .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+  .toolbar .btn { padding: .5rem .75rem; font-size: .82rem; }
+
+  /* ===== Koleksi musik & log ===== */
+  .music-list { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; gap: .45rem; max-height: 15rem; overflow: auto; }
+  .music-item {
+    display: flex; align-items: center; gap: .55rem; min-width: 0;
+    padding: .45rem .55rem; border-radius: .65rem;
+    background: var(--surface-strong); border: 1px solid var(--border);
+  }
+  .music-meta { flex: 1; min-width: 0; }
+  .music-name { display: block; font-size: .84rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .music-sub { font-size: .72rem; color: var(--muted); }
+  .log { display: grid; gap: .25rem; max-height: 11rem; overflow: auto; font-size: .76rem; color: var(--muted); }
+  .log div { border-bottom: 1px dashed var(--border); padding-bottom: .2rem; }
+
+  /* ===== Dialog & toast ===== */
+  dialog {
+    width: min(26rem, 92vw); padding: 1.15rem; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  dialog::backdrop { background: rgba(4, 10, 18, .62); }
+  .dialog-form { display: grid; gap: .75rem; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .3rem; }
+  .check-group { display: grid; grid-template-columns: 1fr 1fr; gap: .1rem .8rem; }
+  .check { display: flex; align-items: center; gap: .45rem; font-size: .86rem; padding: .25rem 0; cursor: pointer; }
+  .toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; display: grid; gap: .5rem; max-width: min(22rem, 90vw); }
+  .toast {
+    padding: .6rem .8rem; border-radius: .6rem; font-size: .83rem;
+    background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--blue);
+    box-shadow: var(--shadow); animation: slide-in .22s ease;
+  }
+  .toast.success { border-left-color: var(--green); }
+  .toast.error { border-left-color: var(--red); }
+  .toast.hide { opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s; }
+  @keyframes slide-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ===== Mode ringan (otomatis/manual) untuk perangkat lama ===== */
+  :root[data-perf="low"] * { transition: none !important; animation: none !important; }
+  :root[data-perf="low"] .btn:hover:not(:disabled),
+  :root[data-perf="low"] .action-btn:hover,
+  :root[data-perf="low"] .tab:hover { transform: none !important; }
+  :root[data-perf="low"] { --shadow: none; }
+  :root[data-perf="low"] body { background: var(--bg-1); }
+  :root[data-perf="low"] .topbar,
+  :root[data-perf="low"] .card,
+  :root[data-perf="low"] dialog,
+  :root[data-perf="low"] .toast { background: var(--panel); }
+  :root[data-perf="low"] .next { background: transparent; }
+  :root[data-perf="low"] .btn-primary,
+  :root[data-perf="low"] .btn-success,
+  :root[data-perf="low"] .btn-danger,
+  :root[data-perf="low"] .tab.active { background: var(--surface-strong); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div>
+        <h1>Bel Sekolah Otomatis</h1>
+        <p id="schoolName">SMP Negeri 6 Banjarmasin</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="seg" role="group" aria-label="Ukuran teks">
+        <button type="button" id="btnFontDown" title="Perkecil teks" aria-label="Perkecil teks">A−</button>
+        <button type="button" id="btnFontReset" class="level" title="Ukuran normal" aria-label="Ukuran teks normal"><span id="fontLevel">100%</span></button>
+        <button type="button" id="btnFontUp" title="Perbesar teks" aria-label="Perbesar teks">A+</button>
+      </div>
+      <button type="button" class="btn btn-ghost" id="btnLight" title="Aktifkan mode hemat daya" aria-label="Mode hemat daya">Mode Hemat</button>
+      <button type="button" class="btn btn-ghost" id="btnTheme" title="Ganti tema" aria-label="Ganti tema">Tema</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="column">
+      <section class="card" id="clockCard" aria-labelledby="clockTitle">
+        <h2 id="clockTitle">Jam dan bel berikutnya</h2>
+        <div class="clock" id="clock">00:00:00</div>
+        <div class="date" id="date">-</div>
+        <div class="next">
+          <div class="next-title">Bel berikutnya</div>
+          <div class="next-label" id="nextLabel">-</div>
+          <div class="countdown" id="countdown">--:--:--</div>
+          <div class="next-hint" id="nextHint"></div>
+        </div>
+        <div class="status off" id="status" role="status" aria-live="polite">Bel belum aktif. Klik Aktifkan bel</div>
+        <div class="actions">
+          <button type="button" class="btn btn-success btn-block" id="btnActivate">Aktifkan bel</button>
+          <button type="button" class="btn btn-primary" id="btnTest">Uji bel</button>
+          <button type="button" class="btn btn-danger" id="btnStop">Hentikan</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="settingsTitle">
+        <h2 id="settingsTitle">Pengaturan</h2>
+        <div class="settings">
+          <label class="field"><span>Nama sekolah</span><input type="text" id="setName" maxlength="60" autocomplete="off"></label>
+          <label class="field"><span>Volume <b id="volumeValue">80%</b></span><input type="range" id="setVolume" min="0" max="1" step="0.05"></label>
+          <label class="field"><span>Pengulangan bel</span>
+            <select id="setRepeat">
+              <option value="1">1x</option><option value="2">2x</option>
+              <option value="3">3x</option><option value="5">5x</option>
+            </select>
+          </label>
+          <label class="switch-row"><input type="checkbox" id="setTTS"><span>Pengumuman suara (TTS)</span></label>
+          <button type="button" class="btn btn-danger" id="btnClearStorage">Hapus semua data</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="column">
+      <section class="card" aria-labelledby="scheduleTitle">
+        <h2 id="scheduleTitle">Jadwal Bel</h2>
+        <div class="tabs" id="tabs" role="tablist" aria-label="Pilih hari"></div>
+        <div class="day-tools">
+          <label class="switch-row"><input type="checkbox" id="dayOff"><span id="dayOffLabel">Libur</span></label>
+          <input type="search" id="search" class="search" placeholder="Cari jadwal..." aria-label="Cari jadwal">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Jam</th><th>Keterangan</th><th>Musik</th><th class="right">Aksi</th><th>Pengumuman</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <form class="add-form" id="addForm">
+          <label class="field"><span>Jam</span><input type="text" id="inTime" class="time-text" maxlength="8" placeholder="01 = 01:00" autocomplete="off" required></label>
+          <label class="field"><span>Keterangan</span><input type="text" id="inLabel" maxlength="60" placeholder="Jam ke-1 / Istirahat" autocomplete="off" required></label>
+          <label class="field"><span>Musik</span><select id="inMusic" aria-label="Musik untuk jadwal baru"></select></label>
+          <button type="submit" class="btn btn-primary">Tambah</button>
+        </form>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btnCopy">Salin ke hari lain</button>
+          <button type="button" class="btn btn-ghost" id="btnExport">Ekspor</button>
+          <button type="button" class="btn btn-ghost" id="btnImport">Impor</button>
+          <button type="button" class="btn btn-danger" id="btnClearDay">Kosongkan hari ini</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="hint">Catatan pengisian jam: cukup tulis angkanya, mis. <b>01</b> = 01:00:00 (jam 1 malam), <b>13.05</b> = 13:05:00 (siang). Format yang diterima: HH, HH.mm / HH:mm, atau HH:mm:ss (24 jam).</p>
+      </section>
+
+      <div class="card-grid">
+        <section class="card" aria-labelledby="musicTitle">
+          <h2 id="musicTitle">Koleksi Musik <span class="badge" id="musicCount"></span></h2>
+          <label class="upload">
+            <input type="file" id="addMusic" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple>
+            <span>Upload musik (MP3/WAV)</span>
+          </label>
+          <ul class="music-list" id="musicList"></ul>
+          <div class="toolbar">
+            <button type="button" class="btn btn-ghost btn-sm" id="btnClearMusic">Hapus semua musik</button>
+          </div>
+          <p class="hint">Musik kini ikut disertakan saat Ekspor/Impor, jadi aman untuk pindah perangkat.</p>
+        </section>
+
+        <section class="card" aria-labelledby="logTitle">
+          <h2 id="logTitle">Riwayat <button type="button" class="btn btn-ghost btn-sm" id="btnClearLog">Bersihkan</button></h2>
+          <div class="log" id="log"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<dialog id="editDialog">
+  <form class="dialog-form" id="editForm">
+    <h3>Ubah jadwal</h3>
+    <label class="field"><span>Jam</span><input type="text" id="editTime" class="time-text" maxlength="8" autocomplete="off" required></label>
+    <label class="field"><span>Keterangan</span><input type="text" id="editLabel" maxlength="60" required></label>
+    <label class="field"><span>Pengumuman suara (opsional)</span><input type="text" id="editAnnounce" maxlength="120" placeholder="Kosongkan = pakai keterangan"></label>
+    <label class="field"><span>Musik</span><select id="editMusic"></select></label>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="btnEditCancel">Batal</button>
+      <button type="submit" class="btn btn-primary">Simpan</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="copyDialog">
+  <form class="dialog-form" id="copyForm">
+    <h3>Salin jadwal ke hari lain</h3>
+    <p class="hint" style="margin:0">Jadwal akan menimpa jadwal pada hari yang dipilih.</p>
+    <div class="check-group" id="copyDays"></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="btnCopyAll">Pilih semua</button>
+      <button type="button" class="btn btn-ghost" id="btnCopyCancel">Batal</button>
+      <button type="submit" class="btn btn-primary">Salin</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script>
+"use strict";
+
+/* =========================================================
+   1. Konstanta & utilitas dasar
+   ========================================================= */
+const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const STORAGE_KEY = "belSekolahData";
+const AUDIO_DB = `${STORAGE_KEY}-audio`;
+const AUDIO_STORE = "files";
+
+const $ = id => document.getElementById(id);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+const fullTime = value => !value ? "" : value.length === 5 ? `${value}:00` : value;
+const parseTimeInput = value => {
+  // Terima "01" -> 01:00:00, "13.05" -> 13:05:00, "13:05:30" -> 13:05:30.
+  const s = String(value ?? "").trim().replace(/[.,]/g, ":");
+  if (!s) return "";
+  const parts = s.split(":").filter(Boolean);
+  if (!parts.length || parts.length > 3) return "";
+  const nums = parts.map(Number);
+  if (nums.some(n => !Number.isFinite(n))) return "";
+  const [h = 0, m = 0, sec = 0] = nums;
+  if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return "";
+  return [h, m, sec].map(v => String(Math.trunc(v)).padStart(2, "0")).join(":");
+};
+const clockTime = date => [date.getHours(), date.getMinutes(), date.getSeconds()]
+  .map(value => String(value).padStart(2, "0")).join(":");
+const duration = seconds => [
+  Math.floor(seconds / 3600),
+  Math.floor(seconds % 3600 / 60),
+  seconds % 60,
+].map(value => String(value).padStart(2, "0")).join(":");
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+const formatBytes = bytes => bytes < 1024 ? `${bytes} B`
+  : bytes < 1048576 ? `${Math.round(bytes / 1024)} KB`
+  : `${(bytes / 1048576).toFixed(1)} MB`;
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const newId = () => crypto.randomUUID?.() ?? `m-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+function humanGap(seconds) {
+  if (seconds < 60) return "kurang dari 1 menit";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `± ${minutes} menit`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return `± ${hours} jam${rest ? ` ${rest} menit` : ""}`;
+}
+
+/* =========================================================
+   2. Data & penyimpanan
+   ========================================================= */
+const buildDefaultSchedule = () => ({
+  0: [],
+  1: [],
+  2: [],
+  3: [],
+  4: [],
+  5: [],
+  6: [],
+});
+const defaultData = () => ({
+  schoolName: "SMP Negeri 6 Banjarmasin",
+  volume: 0.8,
+  repeat: 1,
+  tts: false,
+  holiday: [],
+  musicMeta: {},
+  ui: { scale: 1, theme: "dark", light: false },
+  schedule: buildDefaultSchedule(),
+});
+
+function normalizeSchedule(schedule, fallback) {
+  const result = {};
+  for (let day = 0; day < 7; day += 1) {
+    const source = Array.isArray(schedule?.[day]) ? schedule[day] : fallback[day] || [];
+    const seen = new Set();
+    result[day] = source
+      .filter(item => item && typeof item.time === "string")
+      .map(item => ({
+        time: fullTime(item.time),
+        label: String(item.label ?? "").trim(),
+        musicId: item.musicId || "builtin",
+        announce: String(item.announce ?? "").trim(),
+      }))
+      .filter(item => {
+        const valid = /^\d{2}:\d{2}(:\d{2})?$/.test(item.time);
+        if (!valid || seen.has(item.time)) return false;
+        seen.add(item.time);
+        return true;
+      })
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }
+  return result;
+}
+
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!saved || typeof saved !== "object") return defaultData();
+    // Buang kunci berat/audio yang tidak seharusnya tersimpan di localStorage.
+    delete saved.music;
+    delete saved.musicOrder;
+    delete saved.musicInsertion;
+    delete saved.songs;
+    delete saved.version;
+    delete saved.exportedAt;
+    const base = defaultData();
+    return {
+      ...base,
+      ...saved,
+      ui: { ...base.ui, ...(saved.ui || {}) },
+      holiday: Array.isArray(saved.holiday) ? saved.holiday.filter(day => day >= 0 && day <= 6) : [],
+      schedule: normalizeSchedule(saved.schedule, base.schedule),
+    };
+  } catch {
+    return defaultData();
+  }
+}
+
+let data = loadData();
+let activeTab = new Date().getDay();
+let active = false;
+let audioCtx = null;
+let customPlayer = null;
+let activeNodes = new Set();
+let finishPlayback = null;
+let stopFlag = false;
+let isRinging = false;
+let lastRungKey = "";
+let wakeLock = null;
+let searchTerm = "";
+let busy = false;
+let musicLoaded = false;
+let musicLoadProgress = 0;
+let musicLoadTotal = 0;
+
+function save(silent = false) {
+  try {
+    // Data audio/berat tidak pernah disimpan ke localStorage (hanya IndexedDB).
+    delete data.music;
+    delete data.musicOrder;
+    delete data.musicInsertion;
+    delete data.songs;
+    delete data.version;
+    delete data.exportedAt;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    const full = !!(error && (error.name === "QuotaExceededError" || /quota|exceeded/i.test(String(error.message))));
+    if (!silent) {
+      toast(full
+        ? "Penyimpanan browser penuh. Hapus data lain untuk memberi ruang."
+        : "Gagal menyimpan. Penyimpanan browser tidak tersedia.", "error");
+    }
+  }
+}
+
+/* =========================================================
+   3. Notifikasi & riwayat
+   ========================================================= */
+const logEntries = [];
+function addLog(message) {
+  const stamp = new Date().toLocaleTimeString("id-ID");
+  logEntries.unshift(`<div>[${stamp}] ${escapeHtml(message)}</div>`);
+  if (logEntries.length > 60) logEntries.pop();
+  $("log").innerHTML = logEntries.join("");
+}
+
+function toast(message, type = "info") {
+  const element = document.createElement("div");
+  element.className = `toast ${type}`;
+  element.textContent = message;
+  $("toasts").appendChild(element);
+  setTimeout(() => {
+    element.classList.add("hide");
+    setTimeout(() => element.remove(), 250);
+  }, 3200);
+}
+
+/* =========================================================
+   4. Penyimpanan musik (IndexedDB)
+   ========================================================= */
+const audioDb = new Promise((resolve, reject) => {
+  let request;
+  try {
+    request = indexedDB.open(AUDIO_DB, 1);
+  } catch (error) {
+    reject(error);
+    return;
+  }
+  request.onupgradeneeded = () => request.result.createObjectStore(AUDIO_STORE);
+  request.onsuccess = () => resolve(request.result);
+  request.onerror = () => reject(request.error);
+});
+
+async function audioWrite(action) {
+  const db = await audioDb;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(AUDIO_STORE, "readwrite");
+    action(tx.objectStore(AUDIO_STORE));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+const putMusic = (id, record) => audioWrite(store => store.put(record, id));
+const deleteMusic = id => audioWrite(store => store.delete(id));
+const clearMusic = () => audioWrite(store => store.clear());
+
+async function listMusic() {
+  const db = await audioDb;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(AUDIO_STORE, "readonly");
+    const entries = [];
+    tx.objectStore(AUDIO_STORE).openCursor().onsuccess = event => {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      entries.push({ key: cursor.key, value: cursor.value });
+      cursor.continue();
+    };
+    tx.oncomplete = () => resolve(entries);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+const musicLibrary = new Map();
+let musicVersion = 0;
+
+// Kalau blob audio belum termuat, ambil langsung dari IndexedDB saat diperlukan
+// (mis. bel berbunyi sebelum proses load selesai di komputer lambat).
+async function ensureMusicInMemory(id) {
+  if (id === "builtin" || id === "none" || musicLibrary.has(id)) return;
+  try {
+    const entries = await listMusic();
+    const entry = entries.find(e => e.key === id);
+    if (entry && entry.value && entry.value.blob) {
+      const v = entry.value;
+      musicLibrary.set(id, { name: v.name || "Musik", size: v.blob.size, url: URL.createObjectURL(v.blob) });
+      musicVersion += 1;
+      musicLoaded = true;
+      syncMusicMeta();
+      save();
+      renderMusicList();
+      renderAllSelects();
+      renderTable(true);
+    }
+  } catch { /* biarkan fallback bel bawaan */ }
+}
+
+// Metadata kecil disimpan di localStorage agar nama musik tampil instan
+// sebelum blob audio (besar) selesai dimuat dari IndexedDB.
+function syncMusicMeta() {
+  const meta = {};
+  for (const [id, m] of musicLibrary) meta[id] = { name: m.name, size: m.size || 0 };
+  data.musicMeta = meta;
+}
+
+const musicName = id => {
+  if (id === "builtin") return "Bel bawaan";
+  if (id === "none") return "Tanpa suara";
+  const lib = musicLibrary.get(id);
+  if (lib) return lib.name;
+  const meta = (data.musicMeta || {})[id];
+  return meta ? meta.name : "Bel bawaan";
+};
+
+function musicOptions(selected = "builtin") {
+  const meta = data.musicMeta || {};
+  const known = selected === "builtin" || selected === "none"
+    || musicLibrary.has(selected) || Object.prototype.hasOwnProperty.call(meta, selected);
+  const options = [
+    `<option value="builtin"${selected === "builtin" || !known ? " selected" : ""}>Bel bawaan</option>`,
+    `<option value="none"${selected === "none" ? " selected" : ""}>Tanpa suara (TTS saja)</option>`,
+  ];
+  const ids = [];
+  for (const id in meta) ids.push(id);
+  for (const id of musicLibrary.keys()) if (!ids.includes(id)) ids.push(id);
+  for (const id of ids) {
+    const music = musicLibrary.get(id) || meta[id];
+    if (!music) continue;
+    options.push(`<option value="${id}"${id === selected ? " selected" : ""}>${escapeHtml(music.name)}</option>`);
+  }
+  return options.join("");
+}
+
+/* =========================================================
+   5. Suara
+   ========================================================= */
+async function ensureAudioContext() {
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) throw new Error("Browser tidak mendukung audio");
+  if (!audioCtx) audioCtx = new Audio();
+  if (audioCtx.state === "suspended") {
+    try {
+      // Jangan menggantung: beri waktu maksimum 1,2 dtk untuk resume.
+      // Kalau belum diizinkan, nanti dibuka lagi lewat interaksi pertama pengguna.
+      await Promise.race([
+        audioCtx.resume(),
+        new Promise(resolve => setTimeout(resolve, 1200)),
+      ]);
+    } catch { /* diabaikan */ }
+  }
+  return audioCtx;
+}
+
+function synthBell(soundDuration = 2.2) {
+  return new Promise(resolve => {
+    if (!audioCtx) return resolve();
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.value = clamp(data.volume, 0, 1);
+    master.connect(ctx.destination);
+    const nodes = [];
+
+    [880, 1320, 1760].forEach((frequency, index) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = index === 0 ? "square" : "sine";
+      oscillator.frequency.value = frequency;
+
+      // Modulasi cepat untuk efek "kriiing" bel elektrik.
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.value = 25;
+      lfoGain.gain.value = 0.3;
+      lfo.connect(lfoGain).connect(gain.gain);
+
+      gain.gain.setValueAtTime(0.3 / (index + 1), now);
+      gain.gain.setValueAtTime(0.3 / (index + 1), now + soundDuration - 0.1);
+      gain.gain.linearRampToValueAtTime(0, now + soundDuration);
+
+      oscillator.connect(gain).connect(master);
+      oscillator.start(now);
+      lfo.start(now);
+      oscillator.stop(now + soundDuration);
+      lfo.stop(now + soundDuration);
+      nodes.push(oscillator, lfo);
+    });
+
+    nodes.forEach(node => activeNodes.add(node));
+    const cleanup = () => {
+      nodes.forEach(node => activeNodes.delete(node));
+      if (finishPlayback === cleanup) finishPlayback = null;
+      resolve();
+    };
+    finishPlayback = cleanup;
+    setTimeout(cleanup, soundDuration * 1000 + 350);
+  });
+}
+
+function playClip(url) {
+  return new Promise(resolve => {
+    const player = new Audio(url);
+    player.volume = clamp(data.volume, 0, 1);
+    customPlayer = player;
+    const done = () => {
+      player.onended = null;
+      player.onerror = null;
+      if (customPlayer === player) customPlayer = null;
+      if (finishPlayback === done) finishPlayback = null;
+      resolve();
+    };
+    finishPlayback = done;
+    player.onended = done;
+    player.onerror = done;
+    player.play().catch(done);
+  });
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!data.tts || !("speechSynthesis" in window) || !text) return resolve();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "id-ID";
+    utterance.rate = 0.95;
+    utterance.volume = clamp(data.volume, 0, 1);
+    const voice = speechSynthesis.getVoices().find(item => item.lang.startsWith("id"));
+    if (voice) utterance.voice = voice;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+    speechSynthesis.speak(utterance);
+  });
+}
+
+async function ring({ label = "", musicId = "builtin", count = data.repeat, announce = true, preview = false, announceText = "" } = {}) {
+  if (isRinging) {
+    toast("Bel sedang berbunyi. Klik Hentikan dahulu.", "info");
+    return;
+  }
+  isRinging = true;
+  stopFlag = false;
+  $("clockCard").classList.add("ringing");
+  try {
+    await ensureAudioContext();
+    await ensureMusicInMemory(musicId);
+    const source = musicId === "builtin" ? null : musicLibrary.get(musicId)?.url || null;
+    addLog(preview ? `Pratinjau musik: ${musicName(musicId)}` : `Bel berbunyi: ${label} (${musicName(musicId)})`);
+    if (musicId !== "none") {
+      for (let index = 0; index < Math.max(1, count) && !stopFlag; index += 1) {
+        if (source) await playClip(source);
+        else await synthBell();
+      }
+    }
+    const speakText = announceText.trim() || (label ? `Perhatian. Saatnya ${label}` : "");
+    if (announce && !stopFlag && speakText) await speak(speakText);
+  } catch (error) {
+    addLog(`Suara gagal diputar: ${error.message || error}`);
+    toast("Suara tidak dapat diputar. Periksa pengaturan suara browser.", "error");
+  } finally {
+    isRinging = false;
+    $("clockCard").classList.remove("ringing");
+  }
+}
+
+function stopSound() {
+  stopFlag = true;
+  if (customPlayer) {
+    customPlayer.pause();
+    customPlayer = null;
+  }
+  activeNodes.forEach(node => { try { node.stop(); } catch { /* sudah berhenti */ } });
+  activeNodes.clear();
+  if (finishPlayback) {
+    const done = finishPlayback;
+    finishPlayback = null;
+    done();
+  }
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  $("clockCard").classList.remove("ringing");
+}
+
+/* =========================================================
+   6. Logika jadwal
+   ========================================================= */
+const isHoliday = day => data.holiday.includes(day);
+const sortedItems = day => [...(data.schedule[day] || [])].sort((a, b) => a.time.localeCompare(b.time));
+
+function findNext(now) {
+  for (let offset = 0; offset < 8; offset += 1) {
+    const day = new Date(now);
+    day.setDate(day.getDate() + offset);
+    if (isHoliday(day.getDay())) continue;
+    for (const item of sortedItems(day.getDay())) {
+      const [hours, minutes, seconds] = item.time.split(":").map(Number);
+      const target = new Date(day);
+      target.setHours(hours, minutes, seconds, 0);
+      if (target > now) return { ...item, target, day: day.getDay() };
+    }
+  }
+  return null;
+}
+
+/* =========================================================
+   7. Render antarmuka
+   ========================================================= */
+function applyUi() {
+  data.ui.scale = clamp(Number(data.ui.scale) || 1, 0.75, 1.6);
+  data.ui.theme = data.ui.theme === "light" ? "light" : "dark";
+  document.documentElement.style.setProperty("--scale", data.ui.scale.toFixed(2));
+  document.documentElement.dataset.theme = data.ui.theme;
+  $("fontLevel").textContent = `${Math.round(data.ui.scale * 100)}%`;
+  $("btnTheme").textContent = "Tema";
+  $("btnTheme").title = data.ui.theme === "dark" ? "Aktifkan mode terang" : "Aktifkan mode gelap";
+
+  // Mode ringan: dipaksa manual ATAU otomatis untuk perangkat lemah.
+  data.ui.light = Boolean(data.ui.light);
+  const cores = navigator.hardwareConcurrency || 0;
+  const mem = navigator.deviceMemory || 0;
+  const lowAuto = (cores > 0 && cores <= 2) || (mem > 0 && mem <= 2);
+  const light = data.ui.light || lowAuto;
+  if (light) document.documentElement.dataset.perf = "low";
+  else delete document.documentElement.dataset.perf;
+  const btnLight = $("btnLight");
+  if (btnLight) {
+    btnLight.textContent = light ? "Mode Normal" : "Mode Hemat";
+    btnLight.title = light ? "Kembalikan efek visual penuh" : "Aktifkan mode hemat daya (lebih ringan)";
+  }
+}
+
+function renderSettings() {
+  $("schoolName").textContent = data.schoolName || "Bel Sekolah";
+  $("setName").value = data.schoolName || "";
+  $("setVolume").value = data.volume;
+  $("volumeValue").textContent = `${Math.round(data.volume * 100)}%`;
+  $("setRepeat").value = String(data.repeat);
+  $("setTTS").checked = Boolean(data.tts);
+}
+
+function renderTabs() {
+  const today = new Date().getDay();
+  $("tabs").innerHTML = [1, 2, 3, 4, 5, 6, 0].map(day => {
+    const classes = ["tab"];
+    if (day === activeTab) classes.push("active");
+    if (day === today) classes.push("today");
+    if (isHoliday(day)) classes.push("holiday");
+    return `<button type="button" class="${classes.join(" ")}" data-day="${day}" role="tab"
+      aria-selected="${day === activeTab}" title="${DAYS[day]}${isHoliday(day) ? " (libur)" : ""}">${DAYS[day]}</button>`;
+  }).join("");
+  $("dayOff").checked = isHoliday(activeTab);
+  $("dayOffLabel").textContent = `Libur hari ${DAYS[activeTab]}`;
+}
+
+function renderMusicList() {
+  const items = [...musicLibrary];
+  $("musicCount").textContent = items.length ? `${items.length}` : "";
+  if (!musicLoaded && musicLoadTotal) {
+    $("musicList").innerHTML = `<li class="empty-state">Memuat musik… (${musicLoadProgress}/${musicLoadTotal})</li>`;
+    return;
+  }
+  $("musicList").innerHTML = items.length
+    ? items.map(([id, music]) => `
+      <li class="music-item">
+        <button type="button" class="action-btn" data-play="${id}" title="Pratinjau musik" aria-label="Pratinjau ${escapeHtml(music.name)}">Play</button>
+        <div class="music-meta">
+          <span class="music-name" title="${escapeHtml(music.name)}">${escapeHtml(music.name)}</span>
+          <span class="music-sub">${formatBytes(music.size || 0)}</span>
+        </div>
+        <button type="button" class="action-btn danger" data-remove="${id}" title="Hapus musik" aria-label="Hapus ${escapeHtml(music.name)}">Hapus</button>
+      </li>`).join("")
+    : `<li class="empty-state">Belum ada musik. Upload MP3/WAV untuk mulai.</li>`;
+}
+
+function renderAllSelects() {
+  const addValue = $("inMusic").value || "builtin";
+  $("inMusic").innerHTML = musicOptions(addValue);
+  const editValue = $("editMusic").value || "builtin";
+  $("editMusic").innerHTML = musicOptions(editValue);
+}
+
+let lastTableSignature = "";
+let statusSignature = "";
+
+function renderTable(force = false) {
+  const list = sortedItems(activeTab);
+  const now = new Date();
+  const isToday = activeTab === now.getDay() && !isHoliday(activeTab);
+  const nowTime = clockTime(now);
+  const query = searchTerm.trim().toLowerCase();
+  const visible = query
+    ? list.filter(item => item.label.toLowerCase().includes(query) || item.time.includes(query))
+    : list;
+  const passedCount = isToday ? list.filter(item => item.time <= nowTime).length : 0;
+  const signature = [activeTab, query, passedCount, musicVersion,
+    list.map(item => `${item.time}|${item.label}|${item.musicId}|${item.announce}`).join("~")].join("|");
+
+  if (!force) {
+    if (signature === lastTableSignature) return;
+    if ($("tbody").contains(document.activeElement)) return;
+  }
+
+  const nextItem = isToday ? list.find(item => item.time > nowTime) : null;
+  $("tbody").innerHTML = visible.length
+    ? visible.map(item => {
+        const classes = [];
+        if (isToday && item.time <= nowTime) classes.push("passed");
+        if (item === nextItem) classes.push("upcoming");
+        return `<tr class="${classes.join(" ")}">
+          <td><span class="time-pill">${item.time}</span></td>
+          <td class="label-cell">${escapeHtml(item.label)}</td>
+          <td><select class="music-select" data-time="${item.time}" aria-label="Musik untuk ${item.time}">${musicOptions(item.musicId)}</select></td>
+          <td>
+            <div class="row-actions">
+              <button type="button" class="action-btn" data-action="test" data-time="${item.time}" title="Uji bel" aria-label="Uji bel ${item.time}">Play</button>
+              <button type="button" class="action-btn" data-action="edit" data-time="${item.time}" title="Ubah" aria-label="Ubah bel ${item.time}">Edit</button>
+              <button type="button" class="action-btn danger" data-action="remove" data-time="${item.time}" title="Hapus" aria-label="Hapus bel ${item.time}">Hapus</button>
+            </div>
+          </td>
+          <td><input class="announce-input" type="text" data-announce="${item.time}" value="${escapeHtml(item.announce || "")}" placeholder="opsional" maxlength="120" aria-label="Pengumuman untuk ${item.time}"></td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="5" class="empty-state">${query
+        ? "Tidak ada jadwal yang cocok dengan pencarian."
+        : isHoliday(activeTab) ? "Hari ini ditandai libur. Bel tidak akan berbunyi." : "Belum ada jadwal untuk hari ini."}</td></tr>`;
+  lastTableSignature = signature;
+}
+
+function renderStatus() {
+  const today = new Date().getDay();
+  const holiday = isHoliday(today);
+  const text = active
+    ? holiday ? "Bel aktif, tetapi hari ini ditandai libur" : "Bel aktif — biarkan tab ini tetap terbuka"
+    : "Bel belum aktif. Klik Aktifkan bel";
+  const signature = `${active}|${holiday}|${text}`;
+  if (signature === statusSignature) return;
+  statusSignature = signature;
+
+  const status = $("status");
+  status.className = `status ${active ? "on" : "off"}`;
+  status.textContent = text;
+  $("btnActivate").textContent = active ? "Nonaktifkan bel" : "Aktifkan bel";
+  $("btnActivate").className = `btn ${active ? "btn-ghost" : "btn-success"} btn-block`;
+}
+
+/* =========================================================
+   8. Jam berjalan
+   ========================================================= */
+let lastDateText = "";
+
+function tick() {
+  const now = new Date();
+  $("clock").textContent = clockTime(now);
+
+  const dateText = now.toLocaleDateString("id-ID", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+  if (dateText !== lastDateText) {
+    lastDateText = dateText;
+    $("date").textContent = dateText;
+  }
+
+  const current = clockTime(now);
+  const today = now.getDay();
+  const due = !isHoliday(today)
+    ? (data.schedule[today] || []).find(item => item.time === current)
+    : null;
+  const ringKey = `${now.toDateString()}-${current}`;
+  if (active && due && ringKey !== lastRungKey) {
+    lastRungKey = ringKey;
+    ring({ label: due.label, musicId: due.musicId, announceText: due.announce }).catch(() => {});
+  }
+
+  const next = findNext(now);
+  if (next) {
+    const gap = Math.max(0, Math.floor((next.target - now) / 1000));
+    const dayInfo = next.day !== today ? ` · ${DAYS[next.day]}` : "";
+    $("nextLabel").textContent = `${next.time.slice(0, 5)}${dayInfo} — ${next.label}`;
+    $("countdown").textContent = duration(gap);
+    $("nextHint").textContent = `${humanGap(gap)} lagi`;
+    document.title = `${duration(gap)} · ${next.label} — Bel Sekolah`;
+  } else {
+    $("nextLabel").textContent = "Tidak ada jadwal";
+    $("countdown").textContent = "--:--:--";
+    $("nextHint").textContent = "";
+    document.title = "Bel Sekolah Otomatis";
+  }
+
+  renderTable();
+  renderStatus();
+}
+
+/* =========================================================
+   9. Aksi jadwal
+   ========================================================= */
+function addScheduleItem(time, label, musicId) {
+  if (!time || !label) return toast("Isi jam dan keterangan terlebih dahulu.", "error");
+  if (data.schedule[activeTab].some(item => item.time === time)) {
+    return toast("Jam tersebut sudah ada di jadwal.", "error");
+  }
+  data.schedule[activeTab].push({ time, label, musicId: musicId || "builtin" });
+  data.schedule[activeTab].sort((a, b) => a.time.localeCompare(b.time));
+  save();
+  renderTable(true);
+  addLog(`Jadwal ditambahkan: ${time} — ${label}`);
+  toast(`Bel ${time.slice(0, 5)} ditambahkan.`, "success");
+}
+
+function removeScheduleItem(time) {
+  const item = data.schedule[activeTab].find(entry => entry.time === time);
+  if (!item) return;
+  if (!confirm(`Hapus bel ${time.slice(0, 5)} (${item.label})?`)) return;
+  data.schedule[activeTab] = data.schedule[activeTab].filter(entry => entry.time !== time);
+  save();
+  renderTable(true);
+  addLog(`Jadwal dihapus: ${time}`);
+  toast("Jadwal dihapus.", "success");
+}
+
+function testScheduleItem(time) {
+  const item = data.schedule[activeTab].find(entry => entry.time === time);
+  if (item) ring({ label: item.label, musicId: item.musicId, announceText: item.announce }).catch(() => {});
+}
+
+let editingTime = null;
+
+function openEditDialog(time) {
+  const item = data.schedule[activeTab].find(entry => entry.time === time);
+  if (!item) return;
+  editingTime = time;
+  $("editTime").value = item.time;
+  $("editLabel").value = item.label;
+  $("editAnnounce").value = item.announce || "";
+  $("editMusic").innerHTML = musicOptions(item.musicId);
+  $("editDialog").showModal();
+}
+
+/* =========================================================
+   10. Koleksi musik
+   ========================================================= */
+async function loadMusicLibrary() {
+  musicLoaded = false;
+  let entries = [];
+  try {
+    entries = await listMusic();
+  } catch {
+    addLog("Koleksi musik tidak dapat dimuat");
+  }
+  musicLoadTotal = entries.length;
+  musicLoadProgress = 0;
+  for (const { key, value } of entries) {
+    // Migrasi audio tunggal dari versi lama (tersimpan sebagai Blob tanpa nama).
+    if (value instanceof Blob) {
+      const id = newId();
+      await putMusic(id, { id, name: "Bel lama", blob: value });
+      await deleteMusic(key);
+      musicLibrary.set(id, { name: "Bel lama", size: value.size, url: URL.createObjectURL(value) });
+    } else if (value?.blob) {
+      musicLibrary.set(key, {
+        name: value.name || "Musik",
+        size: value.blob.size,
+        url: URL.createObjectURL(value.blob),
+      });
+    }
+    musicLoadProgress += 1;
+    // Beri kesempatan UI menggambar (progres) agar tidak terasa beku di komputer lambat.
+    if (musicLoadProgress % 3 === 0) {
+      renderMusicList();
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+  musicVersion += 1;
+  musicLoaded = true;
+  syncMusicMeta();
+  save();
+  renderMusicList();
+  renderAllSelects();
+  renderTable(true);
+}
+
+async function addMusicFiles(files) {
+  const list = [...files];
+  const accepted = list.filter(file => /\.(mp3|wav)$/i.test(file.name));
+  if (accepted.length !== list.length) toast("Hanya file .mp3 atau .wav yang didukung.", "error");
+  if (!accepted.length) return;
+
+  let added = 0;
+  let lastId = "";
+  for (const file of accepted) {
+    try {
+      const id = newId();
+      await putMusic(id, { id, name: file.name, blob: file });
+      musicLibrary.set(id, { name: file.name, size: file.size, url: URL.createObjectURL(file) });
+      lastId = id;
+      added += 1;
+    } catch {
+      toast(`Gagal menyimpan ${file.name}.`, "error");
+    }
+  }
+  if (added) {
+    musicVersion += 1;
+    musicLoaded = true;
+    syncMusicMeta();
+    save();
+    renderMusicList();
+    renderAllSelects();
+    $("inMusic").value = lastId;
+    addLog(`${added} musik ditambahkan ke koleksi`);
+    toast(`${added} musik ditambahkan.`, "success");
+  }
+}
+
+async function removeMusic(id) {
+  const music = musicLibrary.get(id);
+  if (!music) return;
+  if (!confirm(`Hapus musik "${music.name}"?`)) return;
+  try {
+    await deleteMusic(id);
+    URL.revokeObjectURL(music.url);
+    musicLibrary.delete(id);
+    Object.values(data.schedule).forEach(list => list.forEach(item => {
+      if (item.musicId === id) item.musicId = "builtin";
+    }));
+    syncMusicMeta();
+    save();
+    musicVersion += 1;
+    renderMusicList();
+    renderAllSelects();
+    renderTable(true);
+    addLog(`Musik dihapus: ${music.name}`);
+    toast("Musik dihapus.", "success");
+  } catch {
+    toast("Gagal menghapus musik.", "error");
+  }
+}
+
+/* =========================================================
+   11. Ekspor / impor
+   ========================================================= */
+async function exportSchedule() {
+  const payload = { ...data, version: 3, exportedAt: new Date().toISOString(), songs: [] };
+  let skipped = 0;
+  for (const [id, music] of musicLibrary) {
+    try {
+      const response = await fetch(music.url);
+      const blob = await response.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      payload.songs.push({ id, name: music.name, size: music.size, dataUrl });
+    } catch {
+      skipped += 1;
+    }
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `jadwal-bel-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  addLog(`Jadwal diekspor (${payload.songs.length} musik${skipped ? `, ${skipped} gagal dibaca` : ""})`);
+  toast(payload.songs.length
+    ? `Jadwal + ${payload.songs.length} musik diekspor.`
+    : "Jadwal diekspor ke file JSON.", "success");
+}
+
+async function importSchedule(file) {
+  if (file.size > 80 * 1024 * 1024) {
+    toast(`File sangat besar (${formatBytes(file.size)}). Impor mungkin berlangsung lama.`, "info");
+  }
+  let imported;
+  try {
+    imported = JSON.parse(await file.text());
+  } catch {
+    return toast("File tidak valid.", "error");
+  }
+  if (!imported || typeof imported !== "object" || !imported.schedule) {
+    return toast("File tidak valid.", "error");
+  }
+
+  const base = defaultData();
+  // Hanya ambil field yang dikenal; jangan salin data audio/berat (mis. `music`)
+  // agar tidak membanjiri localStorage.
+  const validRepeat = [1, 2, 3, 5].includes(Number(imported.repeat)) ? Number(imported.repeat) : data.repeat;
+  data = {
+    ...base,
+    schoolName: String(imported.schoolName ?? data.schoolName ?? base.schoolName).trim() || base.schoolName,
+    volume: clamp(Number(imported.volume) || base.volume, 0, 1),
+    repeat: validRepeat,
+    tts: Boolean(imported.tts ?? data.tts),
+    holiday: Array.isArray(imported.holiday) ? imported.holiday.filter(day => day >= 0 && day <= 6) : data.holiday,
+    ui: { ...base.ui, ...(imported.ui || {}) },
+    schedule: normalizeSchedule(imported.schedule, base.schedule),
+  };
+  applyUi();
+  renderSettings();
+  renderTabs();
+  renderAllSelects();
+  renderTable(true);
+  lastTableSignature = "";
+  addLog("Jadwal diimpor dari file");
+
+  // Pulihkan koleksi musik (format baru `songs` maupun lama `music`).
+  const songSources = [];
+  if (Array.isArray(imported.songs)) {
+    for (const s of imported.songs) songSources.push({ id: s.id, name: s.name, type: s.type, dataUrl: s.dataUrl, data: s.data });
+  }
+  if (Array.isArray(imported.music)) {
+    for (const m of imported.music) songSources.push({ id: m.id, name: m.name, type: m.type, dataUrl: m.dataUrl, data: m.data });
+  }
+
+  let restoredSongs = 0;
+  let failedSongs = 0;
+  if (songSources.length) {
+    for (const song of songSources) {
+      try {
+        let dataUrl = song.dataUrl;
+        if (!dataUrl && typeof song.data === "string") {
+          dataUrl = /^data:/i.test(song.data) ? song.data : `data:${song.type || "audio/wav"};base64,${song.data}`;
+        }
+        if (!dataUrl) { failedSongs += 1; continue; }
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const id = song.id || newId();
+        await putMusic(id, { id, name: song.name || "Musik", blob });
+        musicLibrary.set(id, { name: song.name || "Musik", size: blob.size, url: URL.createObjectURL(blob) });
+        restoredSongs += 1;
+      } catch {
+        failedSongs += 1;
+      }
+    }
+    if (restoredSongs) {
+      musicVersion += 1;
+      renderMusicList();
+      renderAllSelects();
+      renderTable(true);
+    }
+  }
+
+  musicLoaded = true;
+  syncMusicMeta();
+  save(false);
+
+  if (restoredSongs) addLog(`${restoredSongs} musik dipulihkan dari file`);
+  if (failedSongs) addLog(`${failedSongs} musik gagal dipulihkan`);
+  toast(restoredSongs
+    ? `Impor berhasil: jadwal + ${restoredSongs} musik.${failedSongs ? ` ${failedSongs} gagal.` : ""}`
+    : "Jadwal berhasil diimpor.", "success");
+}
+
+/* =========================================================
+   12. Pengikatan event
+   ========================================================= */
+function changeScale(step) {
+  const next = Math.round((data.ui.scale + step) * 100) / 100;
+  data.ui.scale = clamp(next, 0.75, 1.6);
+  save();
+  applyUi();
+}
+
+$("btnFontDown").addEventListener("click", () => changeScale(-0.1));
+$("btnFontUp").addEventListener("click", () => changeScale(0.1));
+$("btnFontReset").addEventListener("click", () => {
+  data.ui.scale = 1;
+  save();
+  applyUi();
+  toast("Ukuran teks dikembalikan ke 100%.", "info");
+});
+$("btnTheme").addEventListener("click", () => {
+  data.ui.theme = data.ui.theme === "dark" ? "light" : "dark";
+  save();
+  applyUi();
+});
+$("btnLight").addEventListener("click", () => {
+  data.ui.light = !data.ui.light;
+  save();
+  applyUi();
+});
+
+$("tabs").addEventListener("click", event => {
+  const tab = event.target.closest(".tab");
+  if (!tab) return;
+  activeTab = Number(tab.dataset.day);
+  renderTabs();
+  renderTable(true);
+  renderStatus();
+});
+
+$("dayOff").addEventListener("change", event => {
+  const next = new Set(data.holiday);
+  event.target.checked ? next.add(activeTab) : next.delete(activeTab);
+  data.holiday = [...next].sort();
+  save();
+  renderTabs();
+  renderTable(true);
+  renderStatus();
+  addLog(`Hari ${DAYS[activeTab]} ditandai ${event.target.checked ? "libur" : "aktif"}`);
+});
+
+$("search").addEventListener("input", event => {
+  searchTerm = event.target.value;
+  renderTable(true);
+});
+
+$("tbody").addEventListener("click", event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  const { action, time } = button.dataset;
+  if (action === "test") testScheduleItem(time);
+  if (action === "edit") openEditDialog(time);
+  if (action === "remove") removeScheduleItem(time);
+});
+
+$("tbody").addEventListener("change", event => {
+  const select = event.target.closest("select[data-time]");
+  const announce = event.target.closest("input[data-announce]");
+  const time = select?.dataset.time || announce?.dataset.announce;
+  if (!time) return;
+  const item = data.schedule[activeTab].find(entry => entry.time === time);
+  if (!item) return;
+  if (select) {
+    item.musicId = select.value || "builtin";
+    save();
+    addLog(`Musik bel ${item.time.slice(0, 5)}: ${musicName(item.musicId)}`);
+  } else if (announce) {
+    item.announce = announce.value.trim();
+    save();
+    addLog(`Pengumuman bel ${item.time.slice(0, 5)} diperbarui`);
+  }
+});
+
+$("addForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const time = parseTimeInput($("inTime").value);
+  if (!time) return toast("Isi jam yang valid (cth 13.05 atau 01).", "error");
+  const label = $("inLabel").value.trim();
+  if (!label) return toast("Keterangan belum diisi.", "error");
+  addScheduleItem(time, label, $("inMusic").value);
+  $("inLabel").value = "";
+  $("inTime").value = "";
+  $("inLabel").focus();
+});
+
+$("editForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const item = data.schedule[activeTab].find(entry => entry.time === editingTime);
+  if (!item) return;
+  const time = parseTimeInput($("editTime").value);
+  const label = $("editLabel").value.trim();
+  if (!time) return toast("Isi jam yang valid (cth 13.05 atau 01).", "error");
+  if (!label) return toast("Keterangan belum diisi.", "error");
+  if (time !== editingTime && data.schedule[activeTab].some(entry => entry.time === time)) {
+    return toast("Jam tersebut sudah dipakai jadwal lain.", "error");
+  }
+  item.time = time;
+  item.label = label;
+  item.announce = $("editAnnounce").value.trim();
+  item.musicId = $("editMusic").value || "builtin";
+  data.schedule[activeTab].sort((a, b) => a.time.localeCompare(b.time));
+  save();
+  renderTable(true);
+  $("editDialog").close();
+  addLog(`Jadwal diubah: ${time} — ${label}`);
+  toast("Jadwal diperbarui.", "success");
+});
+$("btnEditCancel").addEventListener("click", () => $("editDialog").close());
+
+$("btnCopy").addEventListener("click", () => {
+  const days = [1, 2, 3, 4, 5, 6, 0].filter(day => day !== activeTab);
+  $("copyDays").innerHTML = days.map(day =>
+    `<label class="check"><input type="checkbox" value="${day}"> ${DAYS[day]}</label>`).join("");
+  $("copyDialog").showModal();
+});
+$("btnCopyAll").addEventListener("click", () => {
+  const boxes = $$("#copyDays input");
+  const allChecked = boxes.every(box => box.checked);
+  boxes.forEach(box => { box.checked = !allChecked; });
+});
+$("btnCopyCancel").addEventListener("click", () => $("copyDialog").close());
+$("copyForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const selected = $$("#copyDays input:checked").map(box => Number(box.value));
+  if (!selected.length) return toast("Pilih minimal satu hari.", "error");
+  const source = data.schedule[activeTab];
+  selected.forEach(day => { data.schedule[day] = source.map(item => ({ ...item })); });
+  save();
+  renderTabs();
+  renderTable(true);
+  $("copyDialog").close();
+  addLog(`Jadwal ${DAYS[activeTab]} disalin ke ${selected.map(day => DAYS[day]).join(", ")}`);
+  toast(`Jadwal disalin ke ${selected.length} hari.`, "success");
+});
+
+$("addMusic").addEventListener("change", async event => {
+  const files = [...event.target.files];
+  event.target.value = "";
+  if (files.length) await addMusicFiles(files);
+});
+$("musicList").addEventListener("click", event => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  if (button.hasAttribute("data-play")) {
+    ring({ musicId: button.dataset.play, count: 1, announce: false, preview: true }).catch(() => {});
+  }
+  if (button.hasAttribute("data-remove")) removeMusic(button.dataset.remove);
+});
+$("btnClearMusic").addEventListener("click", async () => {
+  if (!musicLibrary.size) return toast("Belum ada musik untuk dihapus.", "info");
+  if (!confirm("Hapus semua musik dari koleksi?")) return;
+  try {
+    await clearMusic();
+    musicLibrary.forEach(music => URL.revokeObjectURL(music.url));
+    musicLibrary.clear();
+    Object.values(data.schedule).forEach(list => list.forEach(item => { item.musicId = "builtin"; }));
+    syncMusicMeta();
+    save();
+    musicVersion += 1;
+    renderMusicList();
+    renderAllSelects();
+    renderTable(true);
+    addLog("Koleksi musik dikosongkan");
+    toast("Semua musik dihapus.", "success");
+  } catch {
+    toast("Gagal menghapus musik.", "error");
+  }
+});
+
+$("setName").addEventListener("input", event => {
+  data.schoolName = event.target.value;
+  $("schoolName").textContent = data.schoolName || "Bel Sekolah";
+  save();
+});
+$("setVolume").addEventListener("input", event => {
+  data.volume = Number(event.target.value);
+  $("volumeValue").textContent = `${Math.round(data.volume * 100)}%`;
+  save();
+});
+$("setRepeat").addEventListener("change", event => {
+  data.repeat = Number(event.target.value);
+  save();
+});
+$("setTTS").addEventListener("change", event => {
+  data.tts = event.target.checked;
+  save();
+});
+
+async function enableBell(automatic = false) {
+  if (active) return;
+  // Aktifkan seketika SEBELUM menunggu audio, agar status & tombol langsung ON
+  // walau suara masih menunggu izin autoplay dari browser.
+  active = true;
+  renderStatus();
+  addLog(automatic ? "Sistem bel diaktifkan otomatis" : "Sistem bel diaktifkan");
+  if (!automatic) toast("Bel aktif. Biarkan tab ini tetap terbuka.", "success");
+  try {
+    await ensureAudioContext();
+    if ("wakeLock" in navigator) {
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+      } catch {
+        addLog("Wake Lock tidak tersedia");
+      }
+    }
+  } catch {
+    addLog("Suara tidak tersedia di browser ini.");
+    if (!automatic) toast("Suara tidak tersedia di browser ini.", "error");
+  }
+}
+
+function disableBell() {
+  if (!active) return;
+  active = false;
+  stopSound();
+  wakeLock?.release?.().catch(() => {});
+  wakeLock = null;
+  if (audioCtx) {
+    audioCtx.suspend().catch(() => {});
+  }
+  renderStatus();
+  addLog("Sistem bel dinonaktifkan");
+}
+
+$("btnActivate").addEventListener("click", async () => {
+  if (active) {
+    disableBell();
+    return;
+  }
+  await enableBell();
+});
+
+$("btnTest").addEventListener("click", () => {
+  ring({ label: "uji coba bel", musicId: $("inMusic").value || "builtin", count: 1, announce: false }).catch(() => {});
+});
+$("btnStop").addEventListener("click", () => {
+  stopSound();
+  addLog("Suara dihentikan");
+});
+
+$("btnClearDay").addEventListener("click", () => {
+  if (!data.schedule[activeTab].length) return toast("Jadwal hari ini sudah kosong.", "info");
+  if (!confirm(`Kosongkan semua jadwal hari ${DAYS[activeTab]}?`)) return;
+  data.schedule[activeTab] = [];
+  save();
+  renderTable(true);
+  addLog(`Jadwal ${DAYS[activeTab]} dikosongkan`);
+  toast("Jadwal hari ini dikosongkan.", "success");
+});
+
+$("btnExport").addEventListener("click", exportSchedule);
+$("btnImport").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (file) await importSchedule(file);
+});
+
+$("btnClearLog").addEventListener("click", () => {
+  logEntries.length = 0;
+  $("log").innerHTML = "";
+});
+
+$("btnClearStorage").addEventListener("click", async () => {
+  if (busy) return;
+  if (!confirm("Hapus semua data bel? Jadwal, musik, dan pengaturan akan dihapus permanen.")) return;
+  busy = true;
+  try {
+    active = false;
+    stopSound();
+    await clearMusic();
+    musicLibrary.forEach(music => URL.revokeObjectURL(music.url));
+    musicLibrary.clear();
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  } catch {
+    busy = false;
+    toast("Gagal menghapus data. Silakan coba lagi.", "error");
+  }
+});
+
+document.addEventListener("visibilitychange", async () => {
+  if (active && document.visibilityState === "visible" && "wakeLock" in navigator) {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch { /* diabaikan */ }
+  }
+});
+
+/* =========================================================
+   13. Inisialisasi
+   ========================================================= */
+applyUi();
+renderSettings();
+renderTabs();
+renderAllSelects();
+renderTable(true);
+renderStatus();
+tick();
+setInterval(tick, 1000);
+
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+loadMusicLibrary();
+
+// Aktifkan bel otomatis begitu halaman dibuka (agar siap jika dipakai sebagai startup app).
+enableBell(true);
+
+// Buka kunci audio pada interaksi pertama (kebijakan autoplay browser).
+function unlockAudio() {
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+  window.removeEventListener("pointerdown", unlockAudio);
+  window.removeEventListener("touchstart", unlockAudio);
+  window.removeEventListener("keydown", unlockAudio);
+}
+window.addEventListener("pointerdown", unlockAudio);
+window.addEventListener("touchstart", unlockAudio);
+window.addEventListener("keydown", unlockAudio);
+
+(async function migrateLegacyAudio() {
+  if (typeof data.customAudio !== "string") {
+    if (data.customAudio) {
+      delete data.customAudio;
+      save();
+    }
+    return;
+  }
+  if (!data.customAudio.startsWith("data:")) {
+    delete data.customAudio;
+    save();
+    return;
+  }
+  try {
+    const blob = await (await fetch(data.customAudio)).blob();
+    const id = newId();
+    await putMusic(id, { id, name: "Bel utama (lama)", blob });
+    musicLibrary.set(id, { name: "Bel utama (lama)", size: blob.size, url: URL.createObjectURL(blob) });
+    delete data.customAudio;
+    save();
+    musicVersion += 1;
+    renderMusicList();
+    renderAllSelects();
+    renderTable(true);
+    addLog("Audio lama dipindahkan ke koleksi musik");
+  } catch {
+    delete data.customAudio;
+    save();
+  }
+})();
+</script>
+</body>
+</html>
